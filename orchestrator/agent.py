@@ -1,8 +1,11 @@
 
 import os
 
+from a2a.types import AgentCapabilities
+from a2a.types import AgentCard
+from a2a.types import AgentInterface
+from a2a.types import AgentSkill
 from google.adk.agents import Agent
-from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 
 # Base URL of the remote weather/time A2A server.
@@ -53,17 +56,47 @@ def say_goodbye(name: str) -> dict:
         }
 
 
+# Agent card of the remote weather/time agent, built in code instead of
+# being fetched from the well-known URL. ADK only accepts URL-string cards
+# over https (or http on a loopback host), which would not work inside
+# docker-compose, where the remote agent is reached via plain http through
+# the "weather-agent" service name.
+weather_time_card = AgentCard(
+    name="weather_time_agent",
+    description=(
+        "Agent to answer questions about the time and weather in a city."
+    ),
+    version="1.0.0",
+    supported_interfaces=[
+        AgentInterface(
+            url=WEATHER_AGENT_URL,
+            protocol_binding="JSONRPC",
+            protocol_version="1.0",
+        )
+    ],
+    capabilities=AgentCapabilities(streaming=True),
+    default_input_modes=["text/plain"],
+    default_output_modes=["text/plain"],
+    skills=[
+        AgentSkill(
+            id="weather_time_agent",
+            name="Weather and time",
+            description=(
+                "Get the current weather and the current time for a city."
+            ),
+            tags=["weather", "time", "city"],
+        )
+    ],
+)
+
 # Remote A2A agent: the weather/time agent exposed by multi_tool_agent.
-# The agent card is fetched from the well-known path of the remote server.
 weather_time_agent = RemoteA2aAgent(
     name="weather_time_agent",
     description=(
         "Remote agent that answers questions about the time and weather "
         "in a city."
     ),
-    agent_card=(
-        f"{WEATHER_AGENT_URL}{AGENT_CARD_WELL_KNOWN_PATH}"
-    ),
+    agent_card=weather_time_card,
 )
 
 
