@@ -1,0 +1,12 @@
+services:
+  multi-tool-agent:
+    build: .
+    container_name: multi-tool-agent-a2a
+    ports:
+      - "${A2A_PORT:-8001}:8001"
+    env_file:
+      - multi_tool_agent/.env
+    environment:
+      A2A_HOST: ${A2A_HOST:-localhost}
+      A2A_PORT: ${A2A_PORT:-8001}
+    restart: unless-stopped

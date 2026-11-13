@@ -1,1 +1,2 @@
-google-adk==2.14.1
+google-adk[a2a]==2.14.1
+uvicorn[standard]>=0.34.0

@@ -13,7 +13,10 @@
 # limitations under the License.
 
 import datetime
+import os
 from zoneinfo import ZoneInfo
+
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from google.adk.agents import Agent
 
 def get_weather(city: str) -> dict:
@@ -78,4 +81,10 @@ root_agent = Agent(
         "You are a helpful agent who can answer user questions about the time and weather in a city."
     ),
     tools=[get_weather, get_current_time],
+)
+
+a2a_app = to_a2a(
+    root_agent,
+    host=os.getenv("A2A_HOST", "localhost"),
+    port=int(os.getenv("A2A_PORT", "8001")),
 )
