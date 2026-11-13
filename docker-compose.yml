@@ -1,12 +1,32 @@
 services:
-  multi-tool-agent:
-    build: .
-    container_name: multi-tool-agent-a2a
-    ports:
-      - "${A2A_PORT:-8001}:8001"
-    env_file:
-      - multi_tool_agent/.env
+  # Remote A2A server exposing the weather/time agent (multi_tool_agent)
+  weather-agent:
+    build:
+      context: .
+      dockerfile: multi_tool_agent/Dockerfile
     environment:
-      A2A_HOST: ${A2A_HOST:-localhost}
-      A2A_PORT: ${A2A_PORT:-8001}
-    restart: unless-stopped
+      # Host advertised in the auto-generated agent card. Must be the service
+      # name so the orchestrator container can reach this server.
+      - A2A_HOST=weather-agent
+      - A2A_PORT=8001
+    env_file:
+      # Provides GOOGLE_API_KEY
+      - ./multi_tool_agent/.env
+    ports:
+      - "8001:8001"
+
+  # Consuming agent: orchestrator with web UI (adk web)
+  orchestrator:
+    build:
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    environment:
+      # Where the orchestrator finds the remote agent card and A2A endpoint
+      - WEATHER_AGENT_URL=http://weather-agent:8001
+    env_file:
+      # Provides GOOGLE_API_KEY
+      - ./orchestrator/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - weather-agent
